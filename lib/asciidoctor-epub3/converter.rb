@@ -1337,23 +1337,41 @@ document.addEventListener('DOMContentLoaded', function(event, reader) {
             end
           end
         end
-
-        font_files, font_css = select_fonts load_css_file(File.join(DATA_DIR, 'styles/epub3-fonts.scss')), (doc.attr 'scripts', 'latin')
-        @book.add_item 'styles/epub3-fonts.css', content: font_css.to_ios
-        unless font_files.empty?
-          # NOTE: metadata property in oepbs package manifest doesn't work; must use proprietary iBooks file instead
-          #(@book.metadata.add_metadata 'meta', 'true')['property'] = 'ibooks:specified-fonts' unless format == :kf8
-          @book.add_optional_file 'META-INF/com.apple.ibooks.display-options.xml', '<?xml version="1.0" encoding="UTF-8"?>
+        if File.exist? File.join workdir, 'epub3-fonts.scss'
+          font_files, font_css = select_fonts load_css_file(File.join(workdir, 'styles/epub3-fonts.scss')), (doc.attr 'scripts', 'latin')
+          @book.add_item 'styles/epub3-fonts.css', content: font_css.to_ios
+          unless font_files.empty?
+            # NOTE: metadata property in oepbs package manifest doesn't work; must use proprietary iBooks file instead
+            #(@book.metadata.add_metadata 'meta', 'true')['property'] = 'ibooks:specified-fonts' unless format == :kf8
+            @book.add_optional_file 'META-INF/com.apple.ibooks.display-options.xml', '<?xml version="1.0" encoding="UTF-8"?>
 <display_options>
 <platform name="*">
 <option name="specified-fonts">true</option>
 </platform>
 </display_options>'.to_ios unless format == :kf8
 
-          font_files.each do |font_file|
-            @book.add_item font_file, content: File.join(DATA_DIR, font_file)
+            font_files.each do |font_file|
+              @book.add_item font_file, content: File.join(workdir, font_file)
+            end
           end
-        end
+        else
+          font_files, font_css = select_fonts load_css_file(File.join(DATA_DIR, 'styles/epub3-fonts.scss')), (doc.attr 'scripts', 'latin')
+          @book.add_item 'styles/epub3-fonts.css', content: font_css.to_ios
+          unless font_files.empty?
+            # NOTE: metadata property in oepbs package manifest doesn't work; must use proprietary iBooks file instead
+            #(@book.metadata.add_metadata 'meta', 'true')['property'] = 'ibooks:specified-fonts' unless format == :kf8
+            @book.add_optional_file 'META-INF/com.apple.ibooks.display-options.xml', '<?xml version="1.0" encoding="UTF-8"?>
+<display_options>
+<platform name="*">
+<option name="specified-fonts">true</option>
+</platform>
+</display_options>'.to_ios unless format == :kf8
+
+            font_files.each do |font_file|
+              @book.add_item font_file, content: File.join(DATA_DIR, font_file)
+            end
+          end
+        end if
         nil
       end
 
